@@ -3,7 +3,6 @@ const fs = require('fs');
 
 const spreedlyEnvironmentKey = 'CashierEnvKey';
 const spreedlyAccessSecret = 'CashierAccSecret';
-let receiverToken = '';
 const auth = new Buffer(`${spreedlyEnvironmentKey}:${spreedlyAccessSecret}`).toString('base64');
 
 const body = {"receiver":{"receiver_type": "spreedly"}};
@@ -43,9 +42,10 @@ const receiverRequest = () => fetch(
 const cashierPaymentTokens = [];
 const RoSpreedlyEnvironment = 'RoSpreedlyEnvironmentKey';
 const deliverAuth = new Buffer(`${spreedlyEnvironmentKey}:${spreedlyAccessSecret}`).toString('base64');
-const url = `https://core.spreedly.com/v1/payment_methods.json?environment_key=[${RoSpreedlyEnvironment}]`;
+const url = `https://core.spreedly.com/v1/payment_methods.json?environment_key=${RoSpreedlyEnvironment}`;
+let receiverToken = '';
 
-
+// Use the receiverToken that we just created above
 // Use the receiverToken that we just created above
 function deliverRequest(cashierPaymentToken) {
     let deliverBody = 
@@ -84,20 +84,29 @@ function deliverRequest(cashierPaymentToken) {
     ).then((d) => {
         if (d.status >= 400) {
             console.log(d);
+        } else {
+            return d.text();
         }
-        let deliverData = d.text();    
+    }).then((result) => {
+        console.log('Deliver Result:',result);
+
+        let deliverData = result;    
         const deliverResult = JSON.parse(deliverData).toString();
-        deliverToken = deliverResult['transaction']['payment_method']['token'];
+        let deliverToken = 'NA';
+        if(deliverResult['transaction'] && deliverResult['transaction']['payment_method'] && deliverResult['transaction']['payment_method']['token']) {
+            deliverToken = deliverResult['transaction']['payment_method']['token'];
 
-        let mapping = {"cashier_token": cashierPaymentToken, "ro_token": deliverToken};
+            let mapping = {"cashier_token": cashierPaymentToken, "ro_token": deliverToken};
+            console.log(mapping);
 
-        if (mapping) {
-            fs.appendFile(
-                `output/deliverOutput.json`,
-                `${JSON.stringify(mapping)},\n`,
-                () => console.log('Done!'),
-            );
-        }
+            if (mapping) {
+                fs.appendFile(
+                    `output/deliverOutput.json`,
+                    `${JSON.stringify(mapping)},\n`,
+                    () => console.log('Done!'),
+                );
+            }
+        } 
     });
 };
 
