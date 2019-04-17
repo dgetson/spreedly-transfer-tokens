@@ -11,29 +11,37 @@ const body = {"receiver":{"receiver_type": "spreedly"}};
 const receiverRequest = () => fetch(
   `https://core.spreedly.com/v1/receivers.json`,
   {
-    method: 'POST',
+    // method: 'POST',
+    method: 'GET', // Get all receivers
     headers: {
       Authorization: `Basic ${auth}`,
       'content-type': 'application/json'
     },
-    body:JSON.stringify(body),
+    // body:JSON.stringify(body), // Comment out for Get request
   }
 ).then((d) => {
     if (d.status >= 400) {
         console.log(d);
+        return null;
+    } else {
+        return d.text();
     }
-
-    let result = d.text();
-    const receiverResult = JSON.parse(result).toString();
-    receiverToken = receiverResult['receiver']['token'];
-    console.log(receiverToken);
+}).then((result) => {
+    console.log('text:',result);
+    console.log('JSON:',JSON.stringify(JSON.parse(result)));
+    
+    const receiverResult = JSON.parse(result);
     if (receiverResult) {
         fs.writeFile(
-            `receiverOutput.json`,
-            receiverResult,
+            `output/receiverOutput.json`,
+            JSON.stringify(receiverResult),
             () => console.log('Done!'),
         );
-    }
+        if(receiverResult['receiver'] && receiverResult['receiver']['token']) {
+            receiverToken = receiverResult['receiver']['token'];
+            console.log(receiverToken);
+        } 
+    }   
 });
 
 
