@@ -1,8 +1,8 @@
 const fetch = require('node-fetch');
 const fs = require('fs');
 
-const spreedlyEnvironmentKey = 'CashierEnvKey';
-const spreedlyAccessSecret = 'CashierAccSecret';
+const spreedlyEnvironmentKey = 'SourceEnvKey';
+const spreedlyAccessSecret = 'SourceAccSecret';
 const auth = new Buffer(`${spreedlyEnvironmentKey}:${spreedlyAccessSecret}`).toString('base64');
 
 const body = {"receiver":{"receiver_type": "spreedly"}};
@@ -47,20 +47,20 @@ const receiverRequest = () => fetch(
 
 // Deliver the payment token to target Spreedly Environment
 //  We will have to loop through all of the Cashier Spreedly Tokens and deliver all them using the deliverRequest below.
-const cashierPaymentTokens = [];
-const RoSpreedlyEnvironment = 'RoSpreedlyEnvironmentKey';
+const sourcePaymentTokens = [];
+const targetSpreedlyEnvironment = 'targetSpreedlyEnvironmentKey';
 const deliverAuth = new Buffer(`${spreedlyEnvironmentKey}:${spreedlyAccessSecret}`).toString('base64');
-const url = `https://core.spreedly.com/v1/payment_methods.json?environment_key=${RoSpreedlyEnvironment}`;
+const url = `https://core.spreedly.com/v1/payment_methods.json?environment_key=${targetSpreedlyEnvironment}`;
 let receiverToken = '';
 
 // Use the receiverToken that we just created above
 // Use the receiverToken that we just created above
-function deliverRequest(cashierPaymentToken) {
+function deliverRequest(sourcePaymentToken) {
     let deliverBody = 
     {
         "delivery": 
         {
-            "payment_method_token": cashierPaymentToken,
+            "payment_method_token": sourcePaymentToken,
             "url": url,
             "headers": "Content-Type: application/json",
             "body": {
@@ -104,7 +104,7 @@ function deliverRequest(cashierPaymentToken) {
         if(deliverResult['transaction'] && deliverResult['transaction']['payment_method'] && deliverResult['transaction']['payment_method']['token']) {
             deliverToken = deliverResult['transaction']['payment_method']['token'];
 
-            let mapping = {"cashier_token": cashierPaymentToken, "ro_token": deliverToken};
+            let mapping = {"source_token": sourcePaymentToken, "target_token": deliverToken};
             console.log(mapping);
 
             if (mapping) {
@@ -118,7 +118,7 @@ function deliverRequest(cashierPaymentToken) {
     });
 };
 
-// Loop through all the Cashier tokens and deliver them to RO Spreedly Environment
-cashierPaymentTokens.forEach(token => {
+// Loop through all the source tokens and deliver them to target Spreedly Environment
+sourcePaymentTokens.forEach(token => {
     deliverRequest(token);
 });
