@@ -46,7 +46,7 @@ const receiverRequest = () => fetch(
 
 
 // Deliver the payment token to target Spreedly Environment
-//  We will have to loop through all of the Cashier Spreedly Tokens and deliver all them using the deliverRequest below.
+//  We will have to loop through all of the source Spreedly Tokens and deliver all them using the deliverRequest below.
 const sourcePaymentTokens = [];
 const targetSpreedlyEnvironment = 'targetSpreedlyEnvironmentKey';
 const deliverAuth = new Buffer(`${spreedlyEnvironmentKey}:${spreedlyAccessSecret}`).toString('base64');
